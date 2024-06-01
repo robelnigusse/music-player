@@ -66,8 +66,8 @@ class _PlayerState extends State<Player> {
                           image: const AssetImage('assets/spotify.png'),
                           fit: BoxFit.cover,
                           colorFilter: ColorFilter.mode(
-                            const Color.fromARGB(255, 72, 53, 99).withOpacity(
-                                0.9), // Adjust the opacity value as needed (0.0 to 1.0)
+                            const Color.fromARGB(255, 72, 53, 99)
+                                .withOpacity(0.9),
                             BlendMode
                                 .dstATop, // This blend mode keeps the original image but applies the color filter
                           ),
