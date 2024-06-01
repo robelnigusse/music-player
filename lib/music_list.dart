@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music/pages/Player.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -25,6 +26,7 @@ class _MusicListState extends State<MusicList> {
   void initState() {
     super.initState();
     _requestPermission();
+    _setupAudioPlayerListener();
   }
 
   Future<void> _requestPermission() async {
@@ -36,9 +38,6 @@ class _MusicListState extends State<MusicList> {
       statusess = await [Permission.audio].request();
     }
 
-    // Permission permission = build.version.sdkInt >= 30
-    //     ? Permission.manageExternalStorage
-    //     : Permission.storage;
     var allAccepted = true;
     statusess.forEach((permission, status) {
       if (status != PermissionStatus.granted) {
@@ -93,6 +92,29 @@ class _MusicListState extends State<MusicList> {
       ),
     );
     audioPlayer.play();
+  }
+
+  Future<void> playNextSong() async {
+    final currentAudioSource = audioPlayer.audioSource;
+    String? currentUri;
+    if (currentAudioSource is UriAudioSource) {
+      currentUri = currentAudioSource.uri.toString();
+    }
+    int currentIndex = songs.indexWhere((song) => song.uri == currentUri);
+    int nextIndex = currentIndex + 1;
+    if (nextIndex < songs.length) {
+      playSong(songs[nextIndex].uri);
+    } else {
+      playSong(songs[0].uri);
+    }
+  }
+
+  void _setupAudioPlayerListener() {
+    audioPlayer.playerStateStream.listen((playerState) {
+      if (playerState.processingState == ProcessingState.completed) {
+        playNextSong();
+      }
+    });
   }
 
   @override
@@ -152,13 +174,16 @@ class _MusicListState extends State<MusicList> {
                   size: 34,
                 ),
               ),
-              trailing: const Icon(
-                Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 34,
-              ),
               onTap: () {
                 playSong(song.uri);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Player(
+                      song: song,
+                    ),
+                  ),
+                );
               },
             ),
           );
