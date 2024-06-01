@@ -1,6 +1,5 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'music_list.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -10,48 +9,19 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  bool _storagePermissionGranted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _requestPermission();
-  }
-
-  Future<void> _requestPermission() async {
-    AndroidDeviceInfo build = await DeviceInfoPlugin().androidInfo;
-    Permission permission = build.version.sdkInt >= 30
-        ? Permission.manageExternalStorage
-        : Permission.storage;
-
-    var status = await permission.status;
-
-    if (!status.isGranted) {
-      status = await permission.request();
-    }
-
-    if (status.isGranted) {
-      setState(() {
-        _storagePermissionGranted = true;
-      });
-    }
-  }
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 72, 53, 99),
       appBar: AppBar(
-        title: const Text("M-Player"),
+        backgroundColor: Colors.black38,
+        title: const Text(
+          "M-Player",
+          style: TextStyle(color: Colors.white70),
+        ),
       ),
-      body: Center(
-        child: _storagePermissionGranted
-            ? const Text("Permission Granted")
-            : const Text("Permission Not Granted"),
+      body: const Center(
+        child: MusicList(),
       ),
     );
   }
