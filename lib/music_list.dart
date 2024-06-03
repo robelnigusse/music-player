@@ -20,7 +20,9 @@ class _MusicListState extends State<MusicList> {
   bool isLoading = true;
   String error = '';
   bool _storagePermissionGranted = false;
-  final AudioPlayer audioPlayer = AudioPlayer();
+  static final AudioPlayer audioPlayer = AudioPlayer();
+  Duration? _savedPosition;
+  bool isplaying = false;
 
   @override
   void initState() {
@@ -86,12 +88,44 @@ class _MusicListState extends State<MusicList> {
   }
 
   Future<void> playSong(String? uri) async {
+    isplaying = true;
+    if (_savedPosition != null) {
+      await audioPlayer.seek(_savedPosition);
+    } else {
+      await audioPlayer.setAudioSource(
+        AudioSource.uri(
+          Uri.parse(uri!),
+        ),
+      );
+    }
+    audioPlayer.play();
+  }
+
+  Future<void> play(String? uri) async {
+    final currentSource = audioPlayer.audioSource;
+    final currentUri =
+        (currentSource is UriAudioSource) ? currentSource.uri.toString() : null;
+    if (currentUri == uri) {
+    } else {
+      isplaying = true;
+      await audioPlayer.setAudioSource(
+        AudioSource.uri(
+          Uri.parse(uri!),
+        ),
+      );
+      audioPlayer.play();
+    }
+  }
+
+  Future<void> pauseSong(String? uri) async {
+    isplaying = false;
+    _savedPosition = await audioPlayer.positionStream.first;
     await audioPlayer.setAudioSource(
       AudioSource.uri(
         Uri.parse(uri!),
       ),
     );
-    audioPlayer.play();
+    audioPlayer.pause();
   }
 
   Future<void> playNextSong() async {
@@ -175,12 +209,15 @@ class _MusicListState extends State<MusicList> {
                 ),
               ),
               onTap: () {
-                playSong(song.uri);
+                play(song.uri);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => Player(
                       song: song,
+                      isplaying: isplaying,
+                      pause: pauseSong,
+                      play: playSong,
                     ),
                   ),
                 );

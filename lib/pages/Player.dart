@@ -4,8 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class Player extends StatefulWidget {
-  Player({super.key, required this.song});
+  Player(
+      {super.key,
+      required this.song,
+      required this.isplaying,
+      required this.pause,
+      required this.play});
   final SongModel song;
+  bool isplaying;
+  Future<void> Function(String?) pause;
+  Future<void> Function(String?) play;
   @override
   State<Player> createState() => _PlayerState();
 }
@@ -106,14 +114,33 @@ class _PlayerState extends State<Player> {
                   ),
                   onPressed: () {},
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.play_circle_fill,
-                    size: 60,
-                    color: Color.fromARGB(255, 214, 201, 201),
-                  ),
-                  onPressed: () {},
-                ),
+                widget.isplaying
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.pause,
+                          size: 60,
+                          color: Color.fromARGB(255, 214, 201, 201),
+                        ),
+                        onPressed: () {
+                          widget.pause(widget.song.uri);
+                          setState(() {
+                            widget.isplaying = false;
+                          });
+                        },
+                      )
+                    : IconButton(
+                        icon: const Icon(
+                          Icons.play_arrow,
+                          size: 60,
+                          color: Color.fromARGB(255, 214, 201, 201),
+                        ),
+                        onPressed: () {
+                          widget.play(widget.song.uri);
+                          setState(() {
+                            widget.isplaying = true;
+                          });
+                        },
+                      ),
                 IconButton(
                   icon: const Icon(
                     Icons.skip_next,
