@@ -9,6 +9,35 @@ import 'const/text_style.dart';
 
 class MusicList extends StatefulWidget {
   const MusicList({super.key});
+  static List<SongModel> songs = [];
+  static final AudioPlayer audioPlayer = AudioPlayer();
+  static Duration? _savedPosition;
+  static bool isplaying = false;
+
+  static Future<void> playSong(String? uri) async {
+    MusicList.isplaying = true;
+    if (_savedPosition != null) {
+      await audioPlayer.seek(_savedPosition);
+    } else {
+      await audioPlayer.setAudioSource(
+        AudioSource.uri(
+          Uri.parse(uri!),
+        ),
+      );
+    }
+    audioPlayer.play();
+  }
+
+  static Future<void> pauseSong(String? uri) async {
+    MusicList.isplaying = false;
+    _savedPosition = await audioPlayer.positionStream.first;
+    await audioPlayer.setAudioSource(
+      AudioSource.uri(
+        Uri.parse(uri!),
+      ),
+    );
+    audioPlayer.pause();
+  }
 
   @override
   State<MusicList> createState() => _MusicListState();
@@ -16,13 +45,10 @@ class MusicList extends StatefulWidget {
 
 class _MusicListState extends State<MusicList> {
   final OnAudioQuery audioQuery = OnAudioQuery();
-  List<SongModel> songs = [];
+
   bool isLoading = true;
   String error = '';
   bool _storagePermissionGranted = false;
-  static final AudioPlayer audioPlayer = AudioPlayer();
-  Duration? _savedPosition;
-  bool isplaying = false;
 
   @override
   void initState() {
@@ -70,7 +96,7 @@ class _MusicListState extends State<MusicList> {
       );
 
       setState(() {
-        songs = fetchedSongs;
+        MusicList.songs = fetchedSongs;
         isLoading = false;
       });
 
@@ -87,64 +113,46 @@ class _MusicListState extends State<MusicList> {
     }
   }
 
-  Future<void> playSong(String? uri) async {
-    isplaying = true;
-    if (_savedPosition != null) {
-      await audioPlayer.seek(_savedPosition);
-    } else {
-      await audioPlayer.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(uri!),
-        ),
-      );
-    }
-    audioPlayer.play();
-  }
-
   Future<void> play(String? uri) async {
-    final currentSource = audioPlayer.audioSource;
+    final currentSource = MusicList.audioPlayer.audioSource;
     final currentUri =
         (currentSource is UriAudioSource) ? currentSource.uri.toString() : null;
     if (currentUri == uri) {
     } else {
-      isplaying = true;
-      await audioPlayer.setAudioSource(
+      MusicList.isplaying = true;
+      await MusicList.audioPlayer.setAudioSource(
         AudioSource.uri(
           Uri.parse(uri!),
         ),
       );
-      audioPlayer.play();
+      MusicList.audioPlayer.play();
     }
   }
 
-  Future<void> pauseSong(String? uri) async {
-    isplaying = false;
-    _savedPosition = await audioPlayer.positionStream.first;
-    await audioPlayer.setAudioSource(
-      AudioSource.uri(
-        Uri.parse(uri!),
-      ),
-    );
-    audioPlayer.pause();
-  }
-
   Future<void> playNextSong() async {
-    final currentAudioSource = audioPlayer.audioSource;
+    final currentAudioSource = MusicList.audioPlayer.audioSource;
     String? currentUri;
     if (currentAudioSource is UriAudioSource) {
       currentUri = currentAudioSource.uri.toString();
     }
-    int currentIndex = songs.indexWhere((song) => song.uri == currentUri);
+    int currentIndex =
+        MusicList.songs.indexWhere((song) => song.uri == currentUri);
     int nextIndex = currentIndex + 1;
-    if (nextIndex < songs.length) {
-      playSong(songs[nextIndex].uri);
+    if (nextIndex < MusicList.songs.length) {
+      setState(() {
+        Player.song = MusicList.songs[nextIndex];
+      });
+      MusicList.playSong(MusicList.songs[nextIndex].uri);
     } else {
-      playSong(songs[0].uri);
+      setState(() {
+        Player.song = MusicList.songs[0];
+      });
+      MusicList.playSong(MusicList.songs[0].uri);
     }
   }
 
   void _setupAudioPlayerListener() {
-    audioPlayer.playerStateStream.listen((playerState) {
+    MusicList.audioPlayer.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
         playNextSong();
       }
@@ -179,9 +187,9 @@ class _MusicListState extends State<MusicList> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ListView.builder(
         physics: const BouncingScrollPhysics(),
-        itemCount: songs.length,
+        itemCount: MusicList.songs.length,
         itemBuilder: (BuildContext context, int index) {
-          var song = songs[index];
+          var song = MusicList.songs[index];
           return Container(
             margin: const EdgeInsets.only(bottom: 4),
             decoration: BoxDecoration(
@@ -214,10 +222,10 @@ class _MusicListState extends State<MusicList> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => Player(
-                      song: song,
-                      isplaying: isplaying,
-                      pause: pauseSong,
-                      play: playSong,
+                      currentsong: song,
+                      isplaying: MusicList.isplaying,
+                      pause: MusicList.pauseSong,
+                      play: MusicList.playSong,
                     ),
                   ),
                 );

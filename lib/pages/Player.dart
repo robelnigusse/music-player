@@ -1,16 +1,22 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:music/music_list.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class Player extends StatefulWidget {
   Player(
       {super.key,
-      required this.song,
+      required currentsong,
       required this.isplaying,
       required this.pause,
-      required this.play});
-  final SongModel song;
+      required this.play}) {
+    song = currentsong;
+  }
+  static SongModel? song;
   bool isplaying;
   Future<void> Function(String?) pause;
   Future<void> Function(String?) play;
@@ -28,9 +34,61 @@ class _PlayerState extends State<Player> {
     _fetchArtwork();
   }
 
+  Future<SongModel> playNext() async {
+    final currentAudioSource = MusicList.audioPlayer.audioSource;
+    String? currentUri;
+    if (currentAudioSource is UriAudioSource) {
+      currentUri = currentAudioSource.uri.toString();
+    }
+    int currentIndex =
+        MusicList.songs.indexWhere((song) => song.uri == currentUri);
+    int nextIndex = currentIndex + 1;
+    if (nextIndex < MusicList.songs.length) {
+      setState(() {
+        Player.song = MusicList.songs[nextIndex];
+        MusicList.playSong(MusicList.songs[nextIndex].uri);
+      });
+
+      return MusicList.songs[nextIndex];
+    } else {
+      setState(() {
+        Player.song = MusicList.songs[0];
+        MusicList.playSong(MusicList.songs[0].uri);
+      });
+
+      return MusicList.songs[0];
+    }
+  }
+
+  Future<SongModel> playPervious() async {
+    final currentAudioSource = MusicList.audioPlayer.audioSource;
+    String? currentUri;
+    if (currentAudioSource is UriAudioSource) {
+      currentUri = currentAudioSource.uri.toString();
+    }
+    int currentIndex =
+        MusicList.songs.indexWhere((song) => song.uri == currentUri);
+    int PerviousIndex = currentIndex - 1;
+    if (PerviousIndex > 0) {
+      setState(() {
+        Player.song = MusicList.songs[PerviousIndex];
+        MusicList.playSong(MusicList.songs[PerviousIndex].uri);
+      });
+
+      return MusicList.songs[PerviousIndex];
+    } else {
+      setState(() {
+        Player.song = MusicList.songs[0];
+        MusicList.playSong(MusicList.songs[MusicList.songs.length - 1].uri);
+      });
+
+      return MusicList.songs[MusicList.songs.length - 1];
+    }
+  }
+
   Future<void> _fetchArtwork() async {
     var artwork =
-        await _audioQuery.queryArtwork(widget.song.id, ArtworkType.AUDIO);
+        await _audioQuery.queryArtwork(Player.song!.id, ArtworkType.AUDIO);
     setState(() {
       _artwork = artwork;
     });
@@ -85,13 +143,13 @@ class _PlayerState extends State<Player> {
             ),
             const SizedBox(height: 20),
             Text(
-              widget.song.title.length > 50
-                  ? '${widget.song.title.substring(0, 47)}...'
-                  : widget.song.title,
+              Player.song!.title.length > 50
+                  ? '${Player.song!.title.substring(0, 47)}...'
+                  : Player.song!.title,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
-              widget.song.artist ?? "Unknown Artist",
+              Player.song!.artist ?? "Unknown Artist",
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 20),
@@ -112,7 +170,9 @@ class _PlayerState extends State<Player> {
                     size: 50,
                     color: Color.fromARGB(255, 214, 201, 201),
                   ),
-                  onPressed: () {},
+                  onPressed: () async {
+                    Player.song = await playPervious();
+                  },
                 ),
                 widget.isplaying
                     ? IconButton(
@@ -122,7 +182,7 @@ class _PlayerState extends State<Player> {
                           color: Color.fromARGB(255, 214, 201, 201),
                         ),
                         onPressed: () {
-                          widget.pause(widget.song.uri);
+                          widget.pause(Player.song!.uri);
                           setState(() {
                             widget.isplaying = false;
                           });
@@ -135,7 +195,7 @@ class _PlayerState extends State<Player> {
                           color: Color.fromARGB(255, 214, 201, 201),
                         ),
                         onPressed: () {
-                          widget.play(widget.song.uri);
+                          widget.play(Player.song!.uri);
                           setState(() {
                             widget.isplaying = true;
                           });
@@ -147,7 +207,9 @@ class _PlayerState extends State<Player> {
                     size: 50,
                     color: Color.fromARGB(255, 214, 201, 201),
                   ),
-                  onPressed: () {},
+                  onPressed: () async {
+                    Player.song = await playNext();
+                  },
                 ),
               ],
             ),

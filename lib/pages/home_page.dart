@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music/pages/Player.dart';
 import '../music_list.dart';
 
 class Home extends StatefulWidget {
