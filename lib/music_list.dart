@@ -2,43 +2,15 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music/pages/Player.dart';
+import 'package:music/provider/Music_Provider.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import 'const/text_style.dart';
 
 class MusicList extends StatefulWidget {
   const MusicList({super.key});
-  static List<SongModel> songs = [];
-  static final AudioPlayer audioPlayer = AudioPlayer();
-  static Duration? _savedPosition;
-  static bool isplaying = false;
-
-  static Future<void> playSong(String? uri) async {
-    MusicList.isplaying = true;
-    if (_savedPosition != null) {
-      await audioPlayer.seek(_savedPosition);
-    } else {
-      await audioPlayer.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(uri!),
-        ),
-      );
-    }
-    audioPlayer.play();
-  }
-
-  static Future<void> pauseSong(String? uri) async {
-    MusicList.isplaying = false;
-    _savedPosition = await audioPlayer.positionStream.first;
-    await audioPlayer.setAudioSource(
-      AudioSource.uri(
-        Uri.parse(uri!),
-      ),
-    );
-    audioPlayer.pause();
-  }
-
   @override
   State<MusicList> createState() => _MusicListState();
 }
@@ -46,8 +18,6 @@ class MusicList extends StatefulWidget {
 class _MusicListState extends State<MusicList> {
   final OnAudioQuery audioQuery = OnAudioQuery();
 
-  bool isLoading = true;
-  String error = '';
   bool _storagePermissionGranted = false;
 
   @override
@@ -55,6 +25,18 @@ class _MusicListState extends State<MusicList> {
     super.initState();
     _requestPermission();
     _setupAudioPlayerListener();
+  }
+
+  void _setupAudioPlayerListener() {
+    context
+        .read<musicprovider>()
+        .audioPlayer
+        .playerStateStream
+        .listen((playerState) {
+      if (playerState.processingState == ProcessingState.completed) {
+        context.read<musicprovider>().playNextSong();
+      }
+    });
   }
 
   Future<void> _requestPermission() async {
@@ -77,86 +59,12 @@ class _MusicListState extends State<MusicList> {
       setState(() {
         _storagePermissionGranted = true;
       });
-      await querySongs();
+      await context.read<musicprovider>().querySongs();
     } else {
-      setState(() {
-        error = 'Storage permission is required to access music files.';
-        isLoading = false;
-      });
+      context.read<musicprovider>().error =
+          'Storage permission is required to access music files.';
+      context.read<musicprovider>().isLoading = false;
     }
-  }
-
-  Future<void> querySongs() async {
-    try {
-      List<SongModel> fetchedSongs = await audioQuery.querySongs(
-        ignoreCase: true,
-        sortType: null,
-        uriType: UriType.EXTERNAL,
-        orderType: OrderType.ASC_OR_SMALLER,
-      );
-
-      setState(() {
-        MusicList.songs = fetchedSongs;
-        isLoading = false;
-      });
-
-      if (fetchedSongs.isEmpty) {
-        setState(() {
-          error = 'No songs found on the device.';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        error = 'Failed to query songs: $e';
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> play(String? uri) async {
-    final currentSource = MusicList.audioPlayer.audioSource;
-    final currentUri =
-        (currentSource is UriAudioSource) ? currentSource.uri.toString() : null;
-    if (currentUri == uri) {
-    } else {
-      MusicList.isplaying = true;
-      await MusicList.audioPlayer.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(uri!),
-        ),
-      );
-      MusicList.audioPlayer.play();
-    }
-  }
-
-  Future<void> playNextSong() async {
-    final currentAudioSource = MusicList.audioPlayer.audioSource;
-    String? currentUri;
-    if (currentAudioSource is UriAudioSource) {
-      currentUri = currentAudioSource.uri.toString();
-    }
-    int currentIndex =
-        MusicList.songs.indexWhere((song) => song.uri == currentUri);
-    int nextIndex = currentIndex + 1;
-    if (nextIndex < MusicList.songs.length) {
-      setState(() {
-        Player.song = MusicList.songs[nextIndex];
-      });
-      MusicList.playSong(MusicList.songs[nextIndex].uri);
-    } else {
-      setState(() {
-        Player.song = MusicList.songs[0];
-      });
-      MusicList.playSong(MusicList.songs[0].uri);
-    }
-  }
-
-  void _setupAudioPlayerListener() {
-    MusicList.audioPlayer.playerStateStream.listen((playerState) {
-      if (playerState.processingState == ProcessingState.completed) {
-        playNextSong();
-      }
-    });
   }
 
   @override
@@ -164,32 +72,31 @@ class _MusicListState extends State<MusicList> {
     if (!_storagePermissionGranted) {
       return Center(
         child: Text(
-          error,
+          context.read<musicprovider>().error,
           style: our_style(),
         ),
       );
     }
 
-    if (isLoading) {
+    if (context.watch<musicprovider>().isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (error.isNotEmpty) {
+    if (context.watch<musicprovider>().error.isNotEmpty) {
       return Center(
         child: Text(
-          error,
+          context.read<musicprovider>().error,
           style: our_style(),
         ),
       );
     }
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ListView.builder(
         physics: const BouncingScrollPhysics(),
-        itemCount: MusicList.songs.length,
+        itemCount: context.read<musicprovider>().songs.length,
         itemBuilder: (BuildContext context, int index) {
-          var song = MusicList.songs[index];
+          var song = context.read<musicprovider>().songs[index];
           return Container(
             margin: const EdgeInsets.only(bottom: 4),
             decoration: BoxDecoration(
@@ -216,17 +123,13 @@ class _MusicListState extends State<MusicList> {
                   size: 34,
                 ),
               ),
-              onTap: () {
-                play(song.uri);
+              onTap: () async {
+                context.read<musicprovider>().currentsong = song;
+                context.read<musicprovider>().play(song.uri);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Player(
-                      currentsong: song,
-                      isplaying: MusicList.isplaying,
-                      pause: MusicList.pauseSong,
-                      play: MusicList.playSong,
-                    ),
+                    builder: (context) => Player(),
                   ),
                 );
               },

@@ -1,97 +1,21 @@
-// ignore_for_file: non_constant_identifier_names
-
-import 'dart:typed_data';
+// ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:music/music_list.dart';
-import 'package:on_audio_query/on_audio_query.dart';
+import 'package:music/provider/Music_Provider.dart';
+import 'package:provider/provider.dart';
 
 class Player extends StatefulWidget {
-  Player(
-      {super.key,
-      required currentsong,
-      required this.isplaying,
-      required this.pause,
-      required this.play}) {
-    song = currentsong;
-  }
-  static SongModel? song;
-  bool isplaying;
-  Future<void> Function(String?) pause;
-  Future<void> Function(String?) play;
+  const Player({super.key});
+
   @override
   State<Player> createState() => _PlayerState();
 }
 
 class _PlayerState extends State<Player> {
-  final OnAudioQuery _audioQuery = OnAudioQuery();
-  Uint8List? _artwork;
-
   @override
   void initState() {
+    context.read<musicprovider>().fetchmusicimage();
     super.initState();
-    _fetchArtwork();
-  }
-
-  Future<SongModel> playNext() async {
-    final currentAudioSource = MusicList.audioPlayer.audioSource;
-    String? currentUri;
-    if (currentAudioSource is UriAudioSource) {
-      currentUri = currentAudioSource.uri.toString();
-    }
-    int currentIndex =
-        MusicList.songs.indexWhere((song) => song.uri == currentUri);
-    int nextIndex = currentIndex + 1;
-    if (nextIndex < MusicList.songs.length) {
-      setState(() {
-        Player.song = MusicList.songs[nextIndex];
-        MusicList.playSong(MusicList.songs[nextIndex].uri);
-      });
-
-      return MusicList.songs[nextIndex];
-    } else {
-      setState(() {
-        Player.song = MusicList.songs[0];
-        MusicList.playSong(MusicList.songs[0].uri);
-      });
-
-      return MusicList.songs[0];
-    }
-  }
-
-  Future<SongModel> playPervious() async {
-    final currentAudioSource = MusicList.audioPlayer.audioSource;
-    String? currentUri;
-    if (currentAudioSource is UriAudioSource) {
-      currentUri = currentAudioSource.uri.toString();
-    }
-    int currentIndex =
-        MusicList.songs.indexWhere((song) => song.uri == currentUri);
-    int PerviousIndex = currentIndex - 1;
-    if (PerviousIndex > 0) {
-      setState(() {
-        Player.song = MusicList.songs[PerviousIndex];
-        MusicList.playSong(MusicList.songs[PerviousIndex].uri);
-      });
-
-      return MusicList.songs[PerviousIndex];
-    } else {
-      setState(() {
-        Player.song = MusicList.songs[0];
-        MusicList.playSong(MusicList.songs[MusicList.songs.length - 1].uri);
-      });
-
-      return MusicList.songs[MusicList.songs.length - 1];
-    }
-  }
-
-  Future<void> _fetchArtwork() async {
-    var artwork =
-        await _audioQuery.queryArtwork(Player.song!.id, ArtworkType.AUDIO);
-    setState(() {
-      _artwork = artwork;
-    });
   }
 
   @override
@@ -119,13 +43,14 @@ class _PlayerState extends State<Player> {
                       color: Colors.black.withOpacity(0.1),
                       spreadRadius: 5,
                       blurRadius: 7,
-                      offset: const Offset(0, 3), // changes position of shadow
+                      offset: const Offset(0, 3),
                     ),
                   ],
-                  image: _artwork != null
+                  image: context.watch<musicprovider>().musicimage != null
                       ? DecorationImage(
-                          image: MemoryImage(
-                              _artwork!), // Use MemoryImage to provide an ImageProvider
+                          image: MemoryImage(context
+                              .watch<musicprovider>()
+                              .musicimage!), // Use MemoryImage to provide an ImageProvider
                           fit: BoxFit.cover,
                         )
                       : DecorationImage(
@@ -134,8 +59,7 @@ class _PlayerState extends State<Player> {
                           colorFilter: ColorFilter.mode(
                             const Color.fromARGB(255, 72, 53, 99)
                                 .withOpacity(0.9),
-                            BlendMode
-                                .dstATop, // This blend mode keeps the original image but applies the color filter
+                            BlendMode.dstATop,
                           ),
                         ),
                 ),
@@ -143,13 +67,14 @@ class _PlayerState extends State<Player> {
             ),
             const SizedBox(height: 20),
             Text(
-              Player.song!.title.length > 50
-                  ? '${Player.song!.title.substring(0, 47)}...'
-                  : Player.song!.title,
+              context.watch<musicprovider>().currentsong.title.length > 50
+                  ? '${context.watch<musicprovider>().currentsong.title.substring(0, 47)}...'
+                  : context.watch<musicprovider>().currentsong.title,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
-              Player.song!.artist ?? "Unknown Artist",
+              context.watch<musicprovider>().currentsong.artist ??
+                  "Unknown Artist",
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 20),
@@ -171,10 +96,12 @@ class _PlayerState extends State<Player> {
                     color: Color.fromARGB(255, 214, 201, 201),
                   ),
                   onPressed: () async {
-                    Player.song = await playPervious();
+                    context.read<musicprovider>().currentsong =
+                        await context.read<musicprovider>().playPervious();
+                    context.read<musicprovider>().fetchmusicimage();
                   },
                 ),
-                widget.isplaying
+                context.watch<musicprovider>().isplaying
                     ? IconButton(
                         icon: const Icon(
                           Icons.pause,
@@ -182,10 +109,10 @@ class _PlayerState extends State<Player> {
                           color: Color.fromARGB(255, 214, 201, 201),
                         ),
                         onPressed: () {
-                          widget.pause(Player.song!.uri);
-                          setState(() {
-                            widget.isplaying = false;
-                          });
+                          context.read<musicprovider>().pauseSong(
+                              context.read<musicprovider>().currentsong.uri);
+
+                          context.read<musicprovider>().isplaying = false;
                         },
                       )
                     : IconButton(
@@ -195,10 +122,9 @@ class _PlayerState extends State<Player> {
                           color: Color.fromARGB(255, 214, 201, 201),
                         ),
                         onPressed: () {
-                          widget.play(Player.song!.uri);
-                          setState(() {
-                            widget.isplaying = true;
-                          });
+                          context.read<musicprovider>().playSong(
+                              context.read<musicprovider>().currentsong.uri);
+                          context.read<musicprovider>().isplaying = true;
                         },
                       ),
                 IconButton(
@@ -208,7 +134,9 @@ class _PlayerState extends State<Player> {
                     color: Color.fromARGB(255, 214, 201, 201),
                   ),
                   onPressed: () async {
-                    Player.song = await playNext();
+                    context.read<musicprovider>().currentsong =
+                        await context.read<musicprovider>().playNext();
+                    context.read<musicprovider>().fetchmusicimage();
                   },
                 ),
               ],
