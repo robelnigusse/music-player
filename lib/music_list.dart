@@ -28,6 +28,7 @@ class _MusicListState extends State<MusicList> {
   }
 
   void _setupAudioPlayerListener() {
+    //change to the next song if cr=urrentsong ended
     context
         .read<musicprovider>()
         .audioPlayer
@@ -90,53 +91,50 @@ class _MusicListState extends State<MusicList> {
         ),
       );
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: ListView.builder(
-        physics: const BouncingScrollPhysics(),
-        itemCount: context.read<musicprovider>().songs.length,
-        itemBuilder: (BuildContext context, int index) {
-          var song = context.read<musicprovider>().songs[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 4),
-            decoration: BoxDecoration(
-              color: Colors.black38,
-              borderRadius: BorderRadius.circular(12),
+    return ListView.builder(
+      physics: const BouncingScrollPhysics(),
+      itemCount: context.read<musicprovider>().songs.length,
+      itemBuilder: (BuildContext context, int index) {
+        var song = context.read<musicprovider>().songs[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 1),
+          decoration: BoxDecoration(
+            color: Colors.black38,
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: ListTile(
+            title: Text(
+              song.title.length > 30
+                  ? '${song.title.substring(0, 27)}...'
+                  : song.title,
+              style: our_style(),
             ),
-            child: ListTile(
-              title: Text(
-                song.title.length > 30
-                    ? '${song.title.substring(0, 27)}...'
-                    : song.title,
-                style: our_style(),
+            subtitle: Text(
+              song.artist ?? "Unknown Artist",
+              style: our_style(size: 10),
+            ),
+            leading: QueryArtworkWidget(
+              id: song.id,
+              type: ArtworkType.AUDIO,
+              nullArtworkWidget: const Icon(
+                Icons.music_note_outlined,
+                color: Colors.white,
+                size: 34,
               ),
-              subtitle: Text(
-                song.artist ?? "Unknown Artist",
-                style: our_style(size: 10),
-              ),
-              leading: QueryArtworkWidget(
-                id: song.id,
-                type: ArtworkType.AUDIO,
-                nullArtworkWidget: const Icon(
-                  Icons.music_note_outlined,
-                  color: Colors.white,
-                  size: 34,
+            ),
+            onTap: () async {
+              context.read<musicprovider>().currentsong = song;
+              context.read<musicprovider>().play(song.uri);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const Player(),
                 ),
-              ),
-              onTap: () async {
-                context.read<musicprovider>().currentsong = song;
-                context.read<musicprovider>().play(song.uri);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Player(),
-                  ),
-                );
-              },
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

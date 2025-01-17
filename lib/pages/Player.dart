@@ -67,13 +67,13 @@ class _PlayerState extends State<Player> {
             ),
             const SizedBox(height: 20),
             Text(
-              context.watch<musicprovider>().currentsong.title.length > 50
-                  ? '${context.watch<musicprovider>().currentsong.title.substring(0, 47)}...'
-                  : context.watch<musicprovider>().currentsong.title,
+              context.watch<musicprovider>().currentsong!.title.length > 50
+                  ? '${context.watch<musicprovider>().currentsong!.title.substring(0, 47)}...'
+                  : context.watch<musicprovider>().currentsong!.title,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
-              context.watch<musicprovider>().currentsong.artist ??
+              context.watch<musicprovider>().currentsong!.artist ??
                   "Unknown Artist",
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
@@ -96,6 +96,7 @@ class _PlayerState extends State<Player> {
                     color: Color.fromARGB(255, 214, 201, 201),
                   ),
                   onPressed: () async {
+                    context.read<musicprovider>().savedPosition = null;
                     context.read<musicprovider>().currentsong =
                         await context.read<musicprovider>().playPervious();
                     context.read<musicprovider>().fetchmusicimage();
@@ -110,7 +111,7 @@ class _PlayerState extends State<Player> {
                         ),
                         onPressed: () {
                           context.read<musicprovider>().pauseSong(
-                              context.read<musicprovider>().currentsong.uri);
+                              context.read<musicprovider>().currentsong!.uri);
 
                           context.read<musicprovider>().isplaying = false;
                         },
@@ -123,8 +124,9 @@ class _PlayerState extends State<Player> {
                         ),
                         onPressed: () {
                           context.read<musicprovider>().playSong(
-                              context.read<musicprovider>().currentsong.uri);
+                              context.read<musicprovider>().currentsong!.uri);
                           context.read<musicprovider>().isplaying = true;
+                          context.read<musicprovider>().savedPosition = null;
                         },
                       ),
                 IconButton(
@@ -134,6 +136,7 @@ class _PlayerState extends State<Player> {
                     color: Color.fromARGB(255, 214, 201, 201),
                   ),
                   onPressed: () async {
+                    context.read<musicprovider>().savedPosition = null;
                     context.read<musicprovider>().currentsong =
                         await context.read<musicprovider>().playNext();
                     context.read<musicprovider>().fetchmusicimage();

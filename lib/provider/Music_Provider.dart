@@ -6,18 +6,18 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 class musicprovider extends ChangeNotifier {
   bool isplaying = false;
-  Duration? _savedPosition;
+  Duration? savedPosition;
   final AudioPlayer audioPlayer = AudioPlayer();
   List<SongModel> songs = [];
   bool isLoading = true;
   String error = '';
   final OnAudioQuery audioQuery = OnAudioQuery();
-  late SongModel currentsong;
+  SongModel? currentsong;
   Uint8List? musicimage;
 
   Future<void> fetchmusicimage() async {
     var artwork =
-        await audioQuery.queryArtwork(currentsong.id, ArtworkType.AUDIO);
+        await audioQuery.queryArtwork(currentsong!.id, ArtworkType.AUDIO);
 
     musicimage = artwork;
   }
@@ -46,8 +46,8 @@ class musicprovider extends ChangeNotifier {
 
   Future<void> playSong(String? uri) async {
     isplaying = true;
-    if (_savedPosition != null) {
-      await audioPlayer.seek(_savedPosition);
+    if (savedPosition != null) {
+      await audioPlayer.seek(savedPosition);
     } else {
       await audioPlayer.setAudioSource(
         AudioSource.uri(
@@ -59,7 +59,7 @@ class musicprovider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<SongModel> playNext() async {
+  Future<SongModel?> playNext() async {
     final currentAudioSource = audioPlayer.audioSource;
     String? currentUri;
     if (currentAudioSource is UriAudioSource) {
@@ -69,18 +69,18 @@ class musicprovider extends ChangeNotifier {
     int nextIndex = currentIndex + 1;
     if (nextIndex < songs.length) {
       currentsong = songs[nextIndex];
-      playSong(currentsong.uri);
+      playSong(currentsong!.uri);
       notifyListeners();
       return currentsong;
     } else {
       currentsong = songs[0];
-      playSong(currentsong.uri);
+      playSong(currentsong!.uri);
       notifyListeners();
       return currentsong;
     }
   }
 
-  Future<SongModel> playPervious() async {
+  Future<SongModel?> playPervious() async {
     final currentAudioSource = audioPlayer.audioSource;
     String? currentUri;
     if (currentAudioSource is UriAudioSource) {
@@ -90,7 +90,7 @@ class musicprovider extends ChangeNotifier {
     int PerviousIndex = currentIndex - 1;
     if (PerviousIndex > 0) {
       currentsong = songs[PerviousIndex];
-      playSong(currentsong.uri);
+      playSong(currentsong!.uri);
       notifyListeners();
       return currentsong;
     } else {
@@ -103,7 +103,7 @@ class musicprovider extends ChangeNotifier {
 
   Future<void> pauseSong(String? uri) async {
     isplaying = false;
-    _savedPosition = await audioPlayer.positionStream.first;
+    savedPosition = await audioPlayer.positionStream.first;
     await audioPlayer.setAudioSource(
       AudioSource.uri(
         Uri.parse(uri!),
@@ -142,11 +142,11 @@ class musicprovider extends ChangeNotifier {
     if (nextIndex < songs.length) {
       currentsong = songs[nextIndex];
 
-      playSong(currentsong.uri);
+      playSong(currentsong!.uri);
     } else {
       currentsong = songs[0];
 
-      playSong(currentsong.uri);
+      playSong(currentsong!.uri);
     }
     notifyListeners();
   }
