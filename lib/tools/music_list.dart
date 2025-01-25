@@ -7,7 +7,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-import 'const/text_style.dart';
+import '../const/text_style.dart';
 
 class MusicList extends StatefulWidget {
   const MusicList({super.key});

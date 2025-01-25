@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:music/provider/Music_Provider.dart';
+import 'package:music/tools/search.dart';
 import 'package:provider/provider.dart';
-import '../music_list.dart';
+import '../tools/music_list.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -15,6 +16,17 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: Search(),
+              );
+            },
+            icon: const Icon(Icons.search),
+          )
+        ],
         title: const Text(
           "M-Player",
           style: TextStyle(color: Colors.white70),
@@ -24,22 +36,6 @@ class _HomeState extends State<Home> {
       ),
       body: Column(
         children: [
-          TextField(
-            onChanged: (value) {
-              //
-            },
-            decoration: InputDecoration(
-              hintText: 'Search for a music...',
-              hintStyle: TextStyle(color: Colors.grey[400]),
-              filled: true,
-              fillColor: const Color.fromARGB(203, 113, 86, 151),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
           const Expanded(
             child: MusicList(),
           ),
