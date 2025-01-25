@@ -104,11 +104,6 @@ class musicprovider extends ChangeNotifier {
   Future<void> pauseSong(String? uri) async {
     isplaying = false;
     savedPosition = await audioPlayer.positionStream.first;
-    await audioPlayer.setAudioSource(
-      AudioSource.uri(
-        Uri.parse(uri!),
-      ),
-    );
     audioPlayer.pause();
     notifyListeners();
   }

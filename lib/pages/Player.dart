@@ -78,13 +78,57 @@ class _PlayerState extends State<Player> {
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 20),
-            Slider(
-              value: 1.03,
-              min: 0,
-              max: 4.12,
-              onChanged: (value) {},
-              activeColor: const Color.fromARGB(255, 88, 64, 121),
-              inactiveColor: const Color.fromARGB(255, 219, 216, 216),
+            //to get the current position of the song
+            StreamBuilder<Duration>(
+              stream: context
+                  .read<musicprovider>()
+                  .audioPlayer
+                  .positionStream, //gives the current position of the song as duration object
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.active) {
+                  // This gives you the current position of the song
+                  Duration currentPosition = snapshot.data ?? Duration.zero;
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '${currentPosition.inMinutes}:${(currentPosition.inSeconds % 60).toString()}',
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.grey),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${context.watch<musicprovider>().audioPlayer.duration?.inMinutes}:${((context.watch<musicprovider>().audioPlayer.duration?.inSeconds ?? 0 % 60) / 10).floor().toString()}',
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        value: currentPosition.inSeconds.toDouble(),
+                        min: 0,
+                        max: context
+                                .watch<musicprovider>()
+                                .audioPlayer
+                                .duration
+                                ?.inSeconds
+                                .toDouble() ??
+                            1.0, //some render overflow error when the music ends so i added 1.0
+                        onChanged: (value) {
+                          context
+                              .read<musicprovider>()
+                              .audioPlayer
+                              .seek(Duration(seconds: value.toInt()));
+                        },
+                        activeColor: const Color.fromARGB(255, 88, 64, 121),
+                        inactiveColor: const Color.fromARGB(255, 219, 216, 216),
+                      ),
+                    ],
+                  );
+                }
+                return const Text('Loading...');
+              },
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

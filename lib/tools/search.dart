@@ -33,12 +33,12 @@ class Search extends SearchDelegate {
 
   @override
   List<Widget>? buildActions(BuildContext context) => [
-        IconButton(
-            onPressed: () {
-              if (query.isEmpty) close(context, null);
-              query = '';
-            },
-            icon: Icon(Icons.clear))
+        // IconButton(
+        //     onPressed: () {
+        //       if (query.isEmpty) close(context, null);
+        //       query = '';
+        //     },
+        //     icon: Icon(Icons.clear))
       ];
 
   @override
