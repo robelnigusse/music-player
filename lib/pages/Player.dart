@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:music/provider/Music_Provider.dart';
+import 'package:music/tools/fav_methods.dart';
 import 'package:provider/provider.dart';
 
 class Player extends StatefulWidget {
@@ -26,6 +27,96 @@ class _PlayerState extends State<Player> {
         title: const Text('Now Playing'),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          StatefulBuilder(
+            builder: (context, setState) {
+              return FutureBuilder<bool>(
+                future:
+                    isFavorite(context.watch<musicprovider>().currentsong!.uri),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return IconButton(
+                      icon: const Icon(
+                        Icons.favorite_border,
+                        color: Colors.grey,
+                      ),
+                      onPressed: null, // Disable while loading
+                    );
+                  }
+
+                  bool isFavorite = snapshot.data ?? false;
+
+                  return IconButton(
+                    icon: Icon(
+                      Icons.favorite,
+                      color: isFavorite ? Colors.red : Colors.white,
+                    ),
+                    onPressed: () async {
+                      String? songUri =
+                          Provider.of<musicprovider>(context, listen: false)
+                              .currentsong!
+                              .uri;
+
+                      if (isFavorite) {
+                        await removeFavorite(songUri);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Center(
+                              child: Text(
+                                'Removed from favorites',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                            backgroundColor:
+                                const Color.fromARGB(255, 210, 109, 109),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            duration: Duration(seconds: 2),
+                            margin: const EdgeInsets.only(
+                                bottom: 20, left: 100, right: 100),
+                          ),
+                        );
+                      } else {
+                        await addFavorite(songUri);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Center(
+                              child: Text(
+                                'Added to favorites',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                            backgroundColor:
+                                const Color.fromARGB(255, 111, 201, 114),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            duration: Duration(seconds: 1),
+                            margin: const EdgeInsets.only(
+                                bottom: 20, left: 100, right: 100),
+                          ),
+                        );
+                      }
+
+                      setState(() {});
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
