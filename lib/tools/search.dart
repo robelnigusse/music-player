@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:music/const/text_style.dart';
 import 'package:music/provider/Music_Provider.dart';
+import 'package:music/tools/BottomPlayer.dart';
 import 'package:provider/provider.dart';
 
 class Search extends SearchDelegate {
@@ -89,78 +90,7 @@ class Search extends SearchDelegate {
             },
           ),
         ),
-        if (context.watch<musicprovider>().currentsong != null)
-          Container(
-            color: Colors.grey[900],
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.music_note_outlined,
-                  color: Colors.white70,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    context.watch<musicprovider>().currentsong!.title,
-                    style: const TextStyle(color: Colors.white70),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  //previous button
-                  icon: const Icon(
-                    Icons.skip_previous,
-                    color: Color.fromARGB(255, 214, 201, 201),
-                  ),
-                  onPressed: () async {
-                    context.read<musicprovider>().savedPosition = null;
-                    context.read<musicprovider>().currentsong =
-                        await context.read<musicprovider>().playPervious();
-                    context.read<musicprovider>().fetchmusicimage();
-                  },
-                ),
-                context.watch<musicprovider>().isplaying
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.pause,
-                          color: Color.fromARGB(255, 214, 201, 201),
-                        ),
-                        onPressed: () {
-                          context.read<musicprovider>().pauseSong(
-                              context.read<musicprovider>().currentsong!.uri);
-
-                          context.read<musicprovider>().isplaying = false;
-                        },
-                      )
-                    : IconButton(
-                        icon: const Icon(
-                          Icons.play_arrow,
-                          color: Color.fromARGB(255, 214, 201, 201),
-                        ),
-                        onPressed: () {
-                          context.read<musicprovider>().playSong(
-                              context.read<musicprovider>().currentsong!.uri);
-                          context.read<musicprovider>().isplaying = true;
-                          context.read<musicprovider>().savedPosition = null;
-                        },
-                      ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.skip_next,
-                    color: Color.fromARGB(255, 214, 201, 201),
-                  ),
-                  onPressed: () async {
-                    context.read<musicprovider>().savedPosition = null;
-                    context.read<musicprovider>().currentsong =
-                        await context.read<musicprovider>().playNext();
-                    context.read<musicprovider>().fetchmusicimage();
-                  },
-                ),
-                //next button
-              ],
-            ),
-          ),
+        if (context.watch<musicprovider>().currentsong != null) BottomPlayer()
       ],
     );
   }

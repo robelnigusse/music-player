@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:music/provider/Album_provider.dart';
 import 'package:music/provider/Music_Provider.dart';
 import 'package:provider/provider.dart';
 
@@ -18,9 +17,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (context) => musicprovider(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => AlbumProvider(),
         ),
       ],
       child: MaterialApp(

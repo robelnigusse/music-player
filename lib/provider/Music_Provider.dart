@@ -7,11 +7,15 @@ import 'package:on_audio_query/on_audio_query.dart';
 class musicprovider extends ChangeNotifier {
   bool isplaying = false;
   Duration? savedPosition;
-  final AudioPlayer audioPlayer = AudioPlayer();
+  final AudioPlayer audioPlayer = AudioPlayer(); //to play song
+
+  List<AlbumModel> albums = [];
+  AlbumModel? currentalbum;
+
   List<SongModel> songs = [];
   bool isLoading = true;
   String error = '';
-  final OnAudioQuery audioQuery = OnAudioQuery();
+  final OnAudioQuery audioQuery = OnAudioQuery(); //to query album and music
   SongModel? currentsong;
   Uint8List? musicimage;
 
@@ -56,6 +60,10 @@ class musicprovider extends ChangeNotifier {
     }
     audioPlayer.play();
     notifyListeners();
+  }
+
+  Future<void> stopSong() async {
+    await audioPlayer.stop();
   }
 
   Future<SongModel?> playNext() async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:music/pages/Album.dart';
 import 'package:music/pages/favorite.dart';
 import 'package:music/provider/Music_Provider.dart';
+import 'package:music/tools/BottomPlayer.dart';
 import 'package:music/tools/search.dart';
 import 'package:provider/provider.dart';
 import '../tools/music_list.dart';
@@ -39,7 +40,7 @@ class _HomeState extends State<Home> {
           )
         ],
         title: const Text(
-          "M-Player",
+          "PlayWave",
           style: TextStyle(color: Colors.white70),
         ),
         centerTitle: true,
@@ -47,13 +48,13 @@ class _HomeState extends State<Home> {
       ),
       body: page[_selectedindex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(220, 226, 222, 222),
+        backgroundColor: Color.fromARGB(255, 172, 151, 201),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.home,
+              Icons.music_note,
             ),
-            label: "Home",
+            label: "Music",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.album),
@@ -83,78 +84,7 @@ class Homepage extends StatelessWidget {
         const Expanded(
           child: MusicList(),
         ),
-        if (context.watch<musicprovider>().currentsong != null)
-          Container(
-            color: const Color.fromARGB(146, 33, 33, 33),
-            //padding: const EdgeInsets.only(),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.music_note_outlined,
-                  color: Colors.white70,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    context.watch<musicprovider>().currentsong!.title,
-                    style: const TextStyle(color: Colors.white70),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  //previous button
-                  icon: const Icon(
-                    Icons.skip_previous,
-                    color: Color.fromARGB(255, 214, 201, 201),
-                  ),
-                  onPressed: () async {
-                    context.read<musicprovider>().savedPosition = null;
-                    context.read<musicprovider>().currentsong =
-                        await context.read<musicprovider>().playPervious();
-                    context.read<musicprovider>().fetchmusicimage();
-                  },
-                ),
-                context.watch<musicprovider>().isplaying
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.pause,
-                          color: Color.fromARGB(255, 214, 201, 201),
-                        ),
-                        onPressed: () {
-                          context.read<musicprovider>().pauseSong(
-                              context.read<musicprovider>().currentsong!.uri);
-
-                          context.read<musicprovider>().isplaying = false;
-                        },
-                      )
-                    : IconButton(
-                        icon: const Icon(
-                          Icons.play_arrow,
-                          color: Color.fromARGB(255, 214, 201, 201),
-                        ),
-                        onPressed: () {
-                          context.read<musicprovider>().playSong(
-                              context.read<musicprovider>().currentsong!.uri);
-                          context.read<musicprovider>().isplaying = true;
-                          context.read<musicprovider>().savedPosition = null;
-                        },
-                      ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.skip_next,
-                    color: Color.fromARGB(255, 214, 201, 201),
-                  ),
-                  onPressed: () async {
-                    context.read<musicprovider>().savedPosition = null;
-                    context.read<musicprovider>().currentsong =
-                        await context.read<musicprovider>().playNext();
-                    context.read<musicprovider>().fetchmusicimage();
-                  },
-                ),
-                //next button
-              ],
-            ),
-          ),
+        if (context.watch<musicprovider>().currentsong != null) BottomPlayer(),
       ],
     );
   }

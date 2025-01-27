@@ -26,7 +26,7 @@ class _MusicListState extends State<MusicList> {
   }
 
   void _setupAudioPlayerListener() {
-    //change to the next song if cr=urrentsong ended
+    //change to the next song if currentsong ended
     context
         .read<musicprovider>()
         .audioPlayer
