@@ -33,7 +33,6 @@ class musicprovider extends ChangeNotifier {
 
       songs = fetchedSongs;
       isLoading = false;
-
       if (fetchedSongs.isEmpty) {
         error = 'No songs found on the device.';
       }

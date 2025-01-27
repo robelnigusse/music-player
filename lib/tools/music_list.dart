@@ -16,8 +16,6 @@ class MusicList extends StatefulWidget {
 }
 
 class _MusicListState extends State<MusicList> {
-  final OnAudioQuery audioQuery = OnAudioQuery();
-
   bool _storagePermissionGranted = false;
 
   @override
@@ -91,6 +89,7 @@ class _MusicListState extends State<MusicList> {
         ),
       );
     }
+
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
       itemCount: context.read<musicprovider>().songs.length,
